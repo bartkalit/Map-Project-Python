@@ -9,8 +9,8 @@ from sklearn.neighbors import BallTree
 
 class MapData:
     def __init__(self):
-        self.data = pd.read_csv('map_app/static/map_app/Checkins_data.txt', sep="\t", header=None)
-        # self.data = pd.read_csv('static/map_app/Checkins_data.txt', sep="\t", header=None)
+        # self.data = pd.read_csv('map_app/static/map_app/Checkins_data.txt', sep="\t", header=None)
+        self.data = pd.read_csv('static/map_app/Checkins_data.txt', sep="\t", header=None)
         self.data.columns = ["user_id", "checkin_time", "lat", "lng", "location_id"]
         self.data["checkin_time"] = pd.to_datetime(self.data["checkin_time"])
 
