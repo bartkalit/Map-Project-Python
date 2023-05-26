@@ -3,7 +3,6 @@
 {% block content %}
     <h1>Travel-time block</h1>
     {% load static %} 
-    <!-- <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script> -->
     <style>
         #map {
             margin-top: 1%;
@@ -40,8 +39,12 @@
     <table id="locationTable" class="table is-hoverable is-bordered">
         <thead>
             <tr>
+                <th>ID</th>
+                <th>User ID</th>
                 <th>Lat</th>
                 <th>Long</th>
+                <th>Location ID</th>
+                <th>Distance</th>
             </tr>
         </thead>
         <tbody></tbody>

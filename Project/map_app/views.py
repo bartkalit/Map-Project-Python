@@ -6,7 +6,7 @@ from django.http import JsonResponse
 import json
 
 
-mapdata = MapData()
+map_data = MapData()
 
 
 def dashboard(request):
@@ -29,10 +29,10 @@ def travel_time_update(request):
         body = request.body.decode('utf-8')
         data = json.loads(body)
         userId = int(data['userId'])
-        locations = mapdata.get_last_visited_location(userId).to_json(orient="records")
-        print(locations)
+        loc_quantity = 10
+        locations = map_data.get_k_closest_locations_for_user(userId, loc_quantity, 'bt')
         context = {
-            'locations' : locations
+            'locations' : locations.to_json(orient="records")
         }
         return JsonResponse(context)
     else:

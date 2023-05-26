@@ -5,7 +5,7 @@ function initMap() {
     var myLatLng = {lat: 37.7749, lng: -122.4194};  // Set the initial coordinates here
     map = new google.maps.Map(document.getElementById('map'), {
         center: myLatLng,
-        zoom: 10
+        zoom: 12
     });
     
     var form = document.getElementById('input-form');
@@ -46,12 +46,13 @@ function addMarkers(locations) {
     for(var i = 0; i < locations.length; i++){
         var marker = new google.maps.Marker({
             position: locations[i],
+            label: i && i.toString(),
             map: map,
             title: 'Location ' + i.toString()
         });
 
-        if(i) {
-            marker.setIcon('http://maps.google.com/mapfiles/ms/icons/blue-dot.png');
+        if(i === 0) {
+            marker.setIcon('http://maps.google.com/mapfiles/kml/pal5/icon13.png');
         }
 
         markers.push(marker);
@@ -67,22 +68,33 @@ function clearTable(tableBody) {
 function fillTable(locations) {
     var tableBody = document.querySelector('#locationTable tbody');
     clearTable(tableBody)
-
+    var counter = 0;
     locations.forEach(loc => {
-        var lat = loc.lat;
-        var lng = loc.lng;
         var row = document.createElement('tr');
-        
-        var latCell = document.createElement('td');
-        latCell.textContent = lat.toFixed(2);
-        row.appendChild(latCell);
-
-        var lngCell = document.createElement('td');
-        lngCell.textContent = lng.toFixed(2);
-        row.appendChild(lngCell);
-
+        addColumn(row, counter);
+        addColumn(row, loc.user_id);
+        addColumn(row, loc.lat, 2);
+        addColumn(row, loc.lng, 2);
+        addColumn(row, loc.location_id);
+        addColumn(row, loc.dist, 3, " km");
         tableBody.appendChild(row);
+        counter++;
     });
+    tableBody.firstChild.classList.add("is-selected");
+}
+
+function addColumn(row, column_data, fixed = null, text="") {
+    var cell = document.createElement('td');
+    if(column_data !== null) {
+        if(fixed !== null) {
+            cell.textContent = column_data.toFixed(fixed);
+        }
+        else {
+            cell.textContent = column_data;
+        }
+        cell.textContent = cell.textContent + text
+    }
+    row.appendChild(cell);
 }
 
 function getCookie(name) {
