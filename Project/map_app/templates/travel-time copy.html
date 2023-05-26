@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Travel-time block</h1>
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
+    <style>
+        #map {
+            margin-top: 1%;
+            height: 400px;
+            width: 100%;
+        }
+        #title {
+            text-align: center;
+        }
+        #locationTable{
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #locationTable th,
+        #locationTable td {
+            padding-left: 6px;
+            padding-right: 6px; 
+        }
+    </style>
+    <form id="input-form" class="field has-addons">
+        <div class="control">
+            <input id="input-userid" class="input is-info" type="text" placeholder="User ID">
+        </div>
+        <div class="control">
+            <a class="button is-info">
+                Search
+            </a>
+        </div>
+    </form>
+    <div id="map"></div>
+    <script>
+        function initMap() {
+            var locations = JSON.parse('{{ locations|safe }}');
+
+            var myLatLng = {lat: 37.7749, lng: -122.4194};  // Set the initial coordinates here
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: locations[0],
+                zoom: 8
+            });
+            for(var i = 0; i < locations.length; i++){
+                var marker = new google.maps.Marker({
+                position: locations[i],
+                map: map,
+                title: 'Location ' + i.toString()
+                });
+            }
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap"></script>
+
+    <h1 id="title">Locaitons</h1>
+    <table id="locationTable" class="table is-hoverable is-bordered">
+        <thead>
+            <tr>
+                <th>Lat</th>
+                <th>Long</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        var locations = JSON.parse('{{ locations|safe }}');
+        var tableBody = document.querySelector('#locationTable tbody');
+
+        locations.forEach(loc => {
+            var lat = loc.lat;
+            var lng = loc.lng;
+            console.log(typeof lat)
+            var row = document.createElement('tr');
+
+            var latCell = document.createElement('td');
+            latCell.textContent = lat.toFixed(2);
+            row.appendChild(latCell);
+
+            var lngCell = document.createElement('td');
+            lngCell.textContent = lng.toFixed(2);
+            row.appendChild(lngCell);
+
+            tableBody.appendChild(row);
+        });
+    </script>
+{% endblock %}
