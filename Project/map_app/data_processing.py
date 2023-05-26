@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import timeit
+import os
 
 from math import radians, sin, cos, sqrt, atan2
 from sklearn.neighbors import NearestNeighbors
@@ -9,8 +10,8 @@ from sklearn.neighbors import BallTree
 
 class MapData:
     def __init__(self):
-        # self.data = pd.read_csv('map_app/static/map_app/Checkins_data.txt', sep="\t", header=None)
-        self.data = pd.read_csv('static/map_app/Checkins_data.txt', sep="\t", header=None)
+        file_path = os.path.join(os.path.dirname(__file__), "static/map_data/Checkins_data.txt")
+        self.data = pd.read_csv(file_path, sep="\t", header=None)
         self.data.columns = ["user_id", "checkin_time", "lat", "lng", "location_id"]
         self.data["checkin_time"] = pd.to_datetime(self.data["checkin_time"])
 
