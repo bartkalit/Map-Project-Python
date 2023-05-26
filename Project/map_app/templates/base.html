@@ -1,31 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maps App</title>
     <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-    <title>Map App</title>
+    href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <style>
+        #view {
+            margin-top: 2%;
+        }
+    </style>
 </head>
 <body>
-    <section class="hero is-small is-success mb-4">
+    <section class="hero is-small is-info ">
         <div class="hero-body">
-            <h1 class="title is-1">Dwitter</h1>
-            <p class="subtitle is-4">
-                Your tiny social network built with Django
-            </p>
+            <h1 class="title is-1"> Main Page </h1>
+
         </div>
     </section>
-
-    <div class="container">
-        <div class="columns">
-
-            {% block content %}
-
-            {% endblock content %}
-
+    <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+        <div id="navbarBasicExample" class="navbar-menu">
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <a id='travel_time_button' class="button is-light" href="{% url 'travel-time' %}">
+                            Travel time
+                        </a>
+                        <a id='hop_friend_button' class="button is-light" href="{% url 'hop-friend' %}">
+                            Hop friend
+                        </a>
+                        <a id='travel_plan_button' class="button is-light" href="{% url 'travel-plan' %}">
+                            Travel plan
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
+    </nav>
+    <div class="container" id="view">
+        {% block content %}
+
+        {% endblock %}
     </div>
+
+    <script>
+        const currentUrl = window.location.pathname;
+        console.log(currentUrl)
+        if (currentUrl === '/map/travel-time') {
+            element = document.getElementById('travel_time_button')
+            element.classList.remove('is-light');
+            element.classList.add('is-primary');
+        } else if (currentUrl === '/map/hop-friend') {
+            element = document.getElementById('hop_friend_button')
+            element.classList.remove('is-light');
+            element.classList.add('is-primary');
+        } else if (currentUrl === '/map/travel-plan') {
+            element = document.getElementById('travel_plan_button')
+            element.classList.remove('is-light');
+            element.classList.add('is-primary');
+        }
+    </script>
 </body>
 </html>
