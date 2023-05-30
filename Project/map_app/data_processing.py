@@ -1,11 +1,14 @@
 import pandas as pd
-import numpy as np
+import asyncio
 import timeit
 import os
 
+from traveltimepy import TravelTimeSdk, Driving, Coordinates, Location
 from math import radians, sin, cos, sqrt, atan2
 from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import BallTree
+from datetime import datetime
+from decouple import config
 
 
 class MapData:
@@ -14,6 +17,7 @@ class MapData:
         self.data = pd.read_csv(file_path, sep="\t", header=None)
         self.data.columns = ["user_id", "checkin_time", "lat", "lng", "location_id"]
         self.data["checkin_time"] = pd.to_datetime(self.data["checkin_time"])
+        self.traveltime_sdk = TravelTimeSdk(config("TRAVELTIME_API_ID"), config("TRAVELTIME_API_KEY"))
 
     def get_lat_long(self, num_of_records=20):
         return self.data[["lat", "lng"]].head(num_of_records).to_json(orient="records")
@@ -78,6 +82,40 @@ class MapData:
             dest_lng=row['lng']
         ), axis=1)
         return new_locations
+
+    def add_travel_time(self, start_location, locations):
+        search_ids={
+            "start": [str(i) for i in locations.index]
+        }
+        points = [Location(id="start", coords=Coordinates(lat=start_location["lat"].values[0], lng=start_location["lng"].values[0]))]
+        for idx in locations.index:
+            points.append(
+                Location(
+                    id=idx,
+                    coords=Coordinates(lat=locations.at[idx, "lat"], lng=locations.at[idx, "lng"])
+                    )
+            )
+
+        result = self.traveltime_time_filter(points, search_ids, Driving())
+
+        locations["duration"] = None
+        for location in result[0].locations:
+            locations.at[int(location.id), "duration"] = location.properties.travel_time
+        return locations
+
+    def traveltime_time_filter(self, points, search_ids, transportation):
+        try:
+            loop = asyncio.get_event_loop()
+            result = loop.run_until_complete(self.traveltime_sdk.time_filter_fast_async(
+                locations=points,
+                search_ids=search_ids,
+                transportation=transportation
+            ))
+            return result
+        except Exception as e:
+            print("Distance API failed")
+            print(e)
+
     
     def find_k_closest_locations_by_lat_lng(self, k : int, start_loc : pd.DataFrame, dest_loc : pd.DataFrame):
         dest = dest_loc[['lat', 'lng']]
@@ -86,8 +124,8 @@ class MapData:
         nn.fit(dest)
         nearest = nn.kneighbors(start, n_neighbors=k, return_distance=False)
         closest = dest_loc.iloc[nearest[0].tolist()]
-        closest = self.add_distance(start_loc, closest)
-        closest = closest.sort_values(by=['dist'], ascending=True)
+        closest = self.add_travel_time(start_loc, closest)
+        closest = closest.sort_values(by=['duration'], ascending=True)
         closest = pd.concat([start_loc, closest.loc[:]]).reset_index(drop=True)
         return closest
 
@@ -97,8 +135,10 @@ class MapData:
         tree = BallTree(dest, leaf_size=30)
         nearest = tree.query(start, k=k , return_distance=False)
         closest = dest_loc.iloc[nearest[0].tolist()]
-        closest = self.add_distance(start_loc, closest)
-        closest = closest.sort_values(by=['dist'], ascending=True)
+        print(type(start_loc))
+        print(type(closest))
+        closest = self.add_travel_time(start_loc, closest)
+        closest = closest.sort_values(by=['duration'], ascending=True)
         closest = pd.concat([start_loc, closest.loc[:]]).reset_index(drop=True)
         return closest
 
@@ -114,7 +154,13 @@ class MapData:
         return data
 
 
-# map_data = MapData()
+map_data = MapData()
+
+start_time = timeit.default_timer()
+data = map_data.get_k_closest_locations_for_user(2, 10, 'bt')
+print(f"BallTree method took {timeit.default_timer() - start_time} s")
+print(data)
+
 
 # start_time = timeit.default_timer()
 # data = map_data.get_k_closest_locations_for_user(531, 10, 'nn')
