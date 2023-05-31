@@ -28,5 +28,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     - name: Run Tests
+      env:
+        GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY}}
+        TRAVELTIME_API_ID: ${{ secrets.TRAVELTIME_API_ID}}
+        TRAVELTIME_API_KEY: ${{ secrets.TRAVELTIME_API_KEY}}
       run: |
         python Project/manage.py test

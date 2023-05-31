@@ -73,10 +73,10 @@ function fillTable(locations) {
         var row = document.createElement('tr');
         addColumn(row, counter);
         addColumn(row, loc.user_id);
-        addColumn(row, loc.lat, 2);
-        addColumn(row, loc.lng, 2);
+        addColumn(row, loc.lat);
+        addColumn(row, loc.lng);
         addColumn(row, loc.location_id);
-        addColumn(row, loc.dist, 3, " km");
+        addColumn(row, loc.duration, 0, "time");
         tableBody.appendChild(row);
         counter++;
     });
@@ -85,14 +85,24 @@ function fillTable(locations) {
 
 function addColumn(row, column_data, fixed = null, text="") {
     var cell = document.createElement('td');
+    console.log(column_data)
     if(column_data !== null) {
-        if(fixed !== null) {
+        if (text === "time") {
+            if (column_data >= 100) {
+                m = parseInt(column_data / 60);
+                s = column_data % 60;
+                cell.textContent = m + "m " + s + "s";
+            }
+            else {
+                cell.textContent = column_data + "s";
+            }
+        }
+        else if(fixed !== null) {
             cell.textContent = column_data.toFixed(fixed);
         }
         else {
             cell.textContent = column_data;
         }
-        cell.textContent = cell.textContent + text
     }
     row.appendChild(cell);
 }
