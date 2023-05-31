@@ -1,9 +1,9 @@
 import pandas as pd
-import asyncio
+import requests
 import timeit
+import json
 import os
 
-from traveltimepy import TravelTimeSdk, Driving, Coordinates, Location
 from math import radians, sin, cos, sqrt, atan2
 from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import BallTree
@@ -14,10 +14,10 @@ from decouple import config
 class MapData:
     def __init__(self):
         file_path = os.path.join(os.path.dirname(__file__), "static/map_data/Checkins_data.txt")
-        self.data = pd.read_csv(file_path, sep="\t", header=None)
-        self.data.columns = ["user_id", "checkin_time", "lat", "lng", "location_id"]
+        columns = ["user_id", "checkin_time", "lat", "lng", "location_id"]
+        self.data = pd.read_csv(file_path, sep="\t", header=None, names=columns)
         self.data["checkin_time"] = pd.to_datetime(self.data["checkin_time"])
-        self.traveltime_sdk = TravelTimeSdk(config("TRAVELTIME_API_ID"), config("TRAVELTIME_API_KEY"))
+        self.traveltime_api_url = "https://api.traveltimeapp.com/v4/time-filter/fast"
 
     def get_lat_long(self, num_of_records=20):
         return self.data[["lat", "lng"]].head(num_of_records).to_json(orient="records")
@@ -84,34 +84,70 @@ class MapData:
         return new_locations
 
     def add_travel_time(self, start_location, locations):
-        search_ids={
-            "start": [str(i) for i in locations.index]
-        }
-        points = [Location(id="start", coords=Coordinates(lat=start_location["lat"].values[0], lng=start_location["lng"].values[0]))]
+        new_locations = locations.copy()
+        request_data = self.get_time_filter_data(start_location, new_locations)
+
+        result = self.traveltime_time_filter(request_data)
+        result = json.loads(result)["results"][0]
+        result = result["locations"]
+        
+        new_locations["duration"] = None
+        for location in result:
+            travel_time = location["properties"]["travel_time"]
+            new_locations.at[int(location["id"]), "duration"] = travel_time
+        return new_locations
+
+    @staticmethod
+    def get_time_filter_data(start_location, locations):
+        points = [{
+            "id": "start_point",
+            "coords": {
+                "lat": start_location["lat"].values[0],
+                "lng": start_location["lng"].values[0]
+            }
+        }]
         for idx in locations.index:
-            points.append(
-                Location(
-                    id=idx,
-                    coords=Coordinates(lat=locations.at[idx, "lat"], lng=locations.at[idx, "lng"])
-                    )
-            )
+            points.append({
+                "id": str(idx),
+                "coords": {
+                    "lat": locations.at[idx, "lat"],
+                    "lng": locations.at[idx, "lng"]
+                }
+            })
 
-        result = self.traveltime_time_filter(points, search_ids, Driving())
+        arrival_searches = {
+            "one_to_many": [
+                {
+                    "id": "arrive-at one-to-many search",
+                    "arrival_location_ids": [str(i) for i in locations.index],
+                    "departure_location_id": "start_point",
+                    "properties": ["travel_time"],
+                    "arrival_time_period": "weekday_morning",
+                    "transportation": {
+                        "type": "walking+ferry"
+                    },
+                    "travel_time": 1800
+                }
+            ],
+            "many_to_one": []
+        }
 
-        locations["duration"] = None
-        for location in result[0].locations:
-            locations.at[int(location.id), "duration"] = location.properties.travel_time
-        return locations
+        request_data = {
+            "locations" : points,
+            "arrival_searches": arrival_searches
+        }
 
-    def traveltime_time_filter(self, points, search_ids, transportation):
+        return json.dumps(request_data)
+
+    def traveltime_time_filter(self, request_data):
         try:
-            loop = asyncio.get_event_loop()
-            result = loop.run_until_complete(self.traveltime_sdk.time_filter_fast_async(
-                locations=points,
-                search_ids=search_ids,
-                transportation=transportation
-            ))
-            return result
+            headers = {
+                "X-Application-Id": config("TRAVELTIME_API_ID"),
+                "X-Api-Key": config("TRAVELTIME_API_KEY"),
+                "Content-Type": "application/json"
+            }
+            response = requests.post(self.traveltime_api_url, headers=headers, data=request_data)
+            return response.text
         except Exception as e:
             print("Distance API failed")
             print(e)
@@ -135,8 +171,6 @@ class MapData:
         tree = BallTree(dest, leaf_size=30)
         nearest = tree.query(start, k=k , return_distance=False)
         closest = dest_loc.iloc[nearest[0].tolist()]
-        print(type(start_loc))
-        print(type(closest))
         closest = self.add_travel_time(start_loc, closest)
         closest = closest.sort_values(by=['duration'], ascending=True)
         closest = pd.concat([start_loc, closest.loc[:]]).reset_index(drop=True)
@@ -154,13 +188,12 @@ class MapData:
         return data
 
 
-map_data = MapData()
+# map_data = MapData()
 
-start_time = timeit.default_timer()
-data = map_data.get_k_closest_locations_for_user(2, 10, 'bt')
-print(f"BallTree method took {timeit.default_timer() - start_time} s")
-print(data)
-
+# start_time = timeit.default_timer()
+# data = map_data.get_k_closest_locations_for_user(2, 10, 'bt')
+# print(f"BallTree method took {timeit.default_timer() - start_time} s")
+# print(data)
 
 # start_time = timeit.default_timer()
 # data = map_data.get_k_closest_locations_for_user(531, 10, 'nn')
