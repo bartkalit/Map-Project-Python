@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.conf import settings
-from .data_processing import MapData
+from .src.data_processing import MapData
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
