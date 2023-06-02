@@ -19,7 +19,9 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Once `pip` has finished downloading the dependencies:
+Once `pip` has finished downloading the dependencies fill the .env file with proper credentials:
+1. [Google Maps API](https://developers.google.com/maps)
+2. [TravelTime API](https://traveltime.com/)
 ```sh
 cd Project
 python manage.py migrate
