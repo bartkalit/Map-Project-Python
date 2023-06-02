@@ -42,6 +42,7 @@ class UserList:
 
         slim_data['check_string'] = slim_data.apply(lambda row: ''.join(sorted([str(row['user_id']), str(row['friend_id'])])), axis=1)
         slim_data = slim_data.drop_duplicates(subset=["check_string"], keep="first")
+        return slim_data
 
     def create_social_network(self):
         for _, row in self.data.head(10).iterrows():
@@ -49,6 +50,7 @@ class UserList:
 
 users = UserList()
 start_time = timeit.default_timer()
-users.remove_duplicates()
+data = users.remove_duplicates()
+print(data.shape)
 # print(''.join(sorted([str(1), str(2)])))
 print(f"BallTree method took {timeit.default_timer() - start_time} s")
