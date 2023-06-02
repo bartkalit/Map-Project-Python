@@ -31,7 +31,6 @@ def travel_time_update(request):
         userId = int(data['userId'])
         loc_quantity = 10
         locations = map_data.get_k_closest_locations_for_user(userId, loc_quantity, 'bt')
-        print(locations)
         context = {
             'locations' : locations.to_json(orient="records")
         }

@@ -1,15 +1,10 @@
 import pandas as pd
-import requests
-import timeit
-import json
 import os
 
 from .traveltime_controller import TravelTime
 from math import radians, sin, cos, sqrt, atan2
 from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import BallTree
-from datetime import datetime
-from decouple import config
 
 
 class MapData:
@@ -20,20 +15,19 @@ class MapData:
         self.data["checkin_time"] = pd.to_datetime(self.data["checkin_time"])
         self.traveltime = TravelTime()
 
-    def get_lat_long(self, num_of_records=20):
-        return self.data[["lat", "lng"]].head(num_of_records).to_json(orient="records")
+    def get_data(self):
+        return self.data
 
     def get_user_locations(self, user_id, num_of_records):
         user_locations = self.data.loc[self.data.user_id == user_id].head(num_of_records)
         return user_locations
 
-    def get_data(self):
-        return self.data
-
     def get_last_visited_location(self, user_id):
         user_locations = self.data.loc[self.data.user_id == user_id]
         last_time_update = user_locations["checkin_time"].min()
-        last_location_index = user_locations.loc[user_locations["checkin_time"] == last_time_update].index
+        last_location_index = user_locations.loc[
+            user_locations["checkin_time"] == last_time_update
+            ].index
         return self.data.iloc[last_location_index]
 
     def get_unvisited_locations(self, user_id):
@@ -132,28 +126,3 @@ class MapData:
         else:
             data = self.find_k_closest_locations_balltree(k, last_loc, dist_loc)
         return data
-
-
-map_data = MapData()
-
-start_time = timeit.default_timer()
-data = map_data.get_k_closest_locations_for_user(2, 10, 'bt')
-print(f"BallTree method took {timeit.default_timer() - start_time} s")
-print(data)
-
-# start_time = timeit.default_timer()
-# data = map_data.get_k_closest_locations_for_user(2, 10, 'nn')
-# print(data)
-# print(f"Nearest Neighbours method took {timeit.default_timer() - start_time} s")
-
-# print("-" * 82)
-
-# start_time = timeit.default_timer()
-# data = map_data.get_k_closest_locations_for_user(2, 10, 'bt')
-# print(data)
-# print(f"BallTree method took {timeit.default_timer() - start_time} s")
-
-# start_time = timeit.default_timer()
-# data = map_data.get_k_closest_locations_for_user(22, 10, 'bt')
-# print(f"BallTree method took {timeit.default_timer() - start_time} s")
-# print(data)
