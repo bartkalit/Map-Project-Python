@@ -3,8 +3,8 @@
 ## Setup
 The first thing to do is to clone the repository:
 ```sh
-$ git clone https://github.com/Fittify/fittify-backend.git
-$ cd fittify-backend
+$ git clone https://github.com/bartkalit/Map-Project-Python.git
+$ cd Map-Project-Python
 ```
 
 Create a virtual environment to install dependencies in and activate it:
