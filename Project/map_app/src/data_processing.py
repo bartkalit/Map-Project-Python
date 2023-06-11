@@ -3,8 +3,8 @@ import numpy as np
 import os
 import timeit
 
-from users_controller.user_list import UserList
-from traveltime_controller import TravelTime
+from .users_controller.user_list import UserList
+from .traveltime_controller import TravelTime
 
 from math import radians, sin, cos, sqrt, atan2
 from sklearn.neighbors import NearestNeighbors
