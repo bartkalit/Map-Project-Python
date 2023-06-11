@@ -49,20 +49,26 @@ class UserList:
 
     def remove_duplicates(self):
         slim_data = self.data
-        slim_data['check_string'] = slim_data.apply(lambda row: ''.join(sorted([str(row['user_id']), str(row['friend_id'])])), axis=1)
+        slim_data['check_string'] = slim_data.apply(lambda row: ' '.join(
+            map(
+                str, 
+                sorted([row['user_id'], row['friend_id']])
+            )), 
+            axis=1
+        )
         slim_data = slim_data.drop_duplicates(subset=["check_string"], keep="first")
         return slim_data
 
     def create_social_network(self):
         curr_user = None
         curr_user_id = None
-        for _, row in self.data.head(10).iterrows():
+        for _, row in self.data.iterrows():
             if curr_user_id != row['user_id']:
                 curr_user_id = row['user_id']
                 curr_user = self.get_user_by_id(curr_user_id)
-            
-            friend = self.get_user_by_id(row['friend_id'])
 
+            friend = self.get_user_by_id(row['friend_id'])
+            
             curr_user.add_friend(friend, self.__duplicates)
             friend.add_friend(curr_user, self.__duplicates)
     
@@ -94,30 +100,3 @@ class UserList:
     def get_2_hop_friends_ids(self, user_id : int):
         hop_friends = self.get_2_hop_friends(user_id)
         return [f.get_id() for f in hop_friends]
-
-
-# users = UserList()
-# print(users.data)
-# start_time = timeit.default_timer()
-# data = users.remove_duplicates()
-# users.create_social_network()
-# friends = users.get_2_hop_friends(2)
-# friends = users.get_2_hop_friends(22)
-# print(data.shape)
-# print(f"Creating social network took {timeit.default_timer() - start_time} s")
-
-# # users.print_social_network()
-
-# start_time = timeit.default_timer()
-# users.data = users.remove_duplicates()
-# users.create_social_network()
-# friends = users.get_2_hop_friends(2)
-# friends = users.get_2_hop_friends(22)
-# print(data.shape)
-# print(f"Creating social network + removing duplicates took {timeit.default_timer() - start_time} s")
-
-# start_time = timeit.default_timer()
-# friends = users.get_2_hop_friends(2)
-# print(data.shape)
-# print(f"Finding 2 hop friends took {timeit.default_timer() - start_time} s")
-# print([friend.get_id() for friend in friends])
