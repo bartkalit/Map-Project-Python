@@ -2,6 +2,7 @@ var map
 var markers = [];
 
 function initMap() {
+    var updateFunc = window.updateMapFunc;
     var myLatLng = {lat: 37.7749, lng: -122.4194};  // Set the initial coordinates here
     map = new google.maps.Map(document.getElementById('map'), {
         center: myLatLng,
@@ -10,13 +11,13 @@ function initMap() {
     
     var form = document.getElementById('input-form');
     var input = document.getElementById('input-userid');
-
+    
     form.addEventListener('submit', async e => {
         e.preventDefault();
-
+        
         var userId = input.value;
         
-        const response = await fetch('travel-time-update', {
+        const response = await fetch(updateFunc, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -32,6 +33,10 @@ function initMap() {
         clearMarkers()
         addMarkers(locations)
         fillTable(locations)
+
+        if (updateFunc == "hop-time-update") {
+            fillFriendsTable(result.friends, result.chosen_f)
+        }
     });
 }
 
@@ -81,6 +86,19 @@ function fillTable(locations) {
         counter++;
     });
     tableBody.firstChild.classList.add("is-selected");
+}
+
+function fillFriendsTable(locations, chosen_f) {
+    var tableBody = document.querySelector('#friendTable tbody');
+    clearTable(tableBody)
+    locations.forEach(userId => {
+        var row = document.createElement('tr');
+        addColumn(row, userId);
+        if (chosen_f.includes(userId)) {
+            row.classList.add("is-selected");
+        }
+        tableBody.appendChild(row);
+    });
 }
 
 function addColumn(row, column_data, fixed = null, text="") {
