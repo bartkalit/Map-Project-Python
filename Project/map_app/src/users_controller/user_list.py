@@ -100,32 +100,3 @@ class UserList:
     def get_2_hop_friends_ids(self, user_id : int):
         hop_friends = self.get_2_hop_friends(user_id)
         return [f.get_id() for f in hop_friends]
-
-
-# users = UserList()
-# print(users.data)
-# start_time = timeit.default_timer()
-# data = users.remove_duplicates()
-# users.create_social_network()
-# friends = users.data[users.data['user_id'] == 490]
-# friends = users.get_2_hop_friends(490)
-# print(friends)
-# friends = users.get_2_hop_friends(22)
-# print(data.shape)
-# print(f"Creating social network took {timeit.default_timer() - start_time} s")
-
-# # users.print_social_network()
-
-# start_time = timeit.default_timer()
-# users.data = users.remove_duplicates()
-# users.create_social_network()
-# friends = users.get_2_hop_friends(2)
-# friends = users.get_2_hop_friends(22)
-# print(data.shape)
-# print(f"Creating social network + removing duplicates took {timeit.default_timer() - start_time} s")
-
-# start_time = timeit.default_timer()
-# friends = users.get_2_hop_friends(2)
-# print(data.shape)
-# print(f"Finding 2 hop friends took {timeit.default_timer() - start_time} s")
-# print([friend.get_id() for friend in friends])
