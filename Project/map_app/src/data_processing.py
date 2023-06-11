@@ -1,10 +1,13 @@
 import pandas as pd
+import numpy as np
 import os
+import timeit
 
-from .traveltime_controller import TravelTime
+from traveltime_controller import TravelTime
 from math import radians, sin, cos, sqrt, atan2
 from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import BallTree
+from users_controller.user_list import UserList
 
 
 class MapData:
@@ -14,6 +17,7 @@ class MapData:
         self.data = pd.read_csv(file_path, sep="\t", header=None, names=columns)
         self.data["checkin_time"] = pd.to_datetime(self.data["checkin_time"])
         self.traveltime = TravelTime()
+        self.user_list = UserList()
 
     def get_data(self):
         return self.data
@@ -36,6 +40,15 @@ class MapData:
 
         other_loc = self.data.loc[self.data["user_id"] != user_id]
         univisted = other_loc[~(other_loc['location_id'].isin(user_loc_id))]
+        return univisted
+
+    def get_unvisited_2hop_locations(self, user_id):
+        user_loc = self.data.loc[self.data["user_id"] == user_id]
+        user_loc_id = user_loc['location_id'].values
+        hop_friends_ids = self.user_list.get_2_hop_friends_ids(user_id)
+        other_loc = self.data.loc[self.data["user_id"] != user_id]
+        hop_loc = other_loc[np.isin(other_loc['user_id'], hop_friends_ids)]
+        univisted = hop_loc[~(hop_loc['location_id'].isin(user_loc_id))]
         return univisted
 
     @staticmethod
@@ -96,7 +109,8 @@ class MapData:
         start = start_loc[['lat', 'lng']]
         nn = NearestNeighbors(metric="haversine", algorithm='ball_tree')
         nn.fit(dest)
-        nearest = nn.kneighbors(start, n_neighbors=k * 5, return_distance=False)
+        n_neighbors = k * 5 if k * 5 < len(dest) else len(dest)
+        nearest = nn.kneighbors(start, n_neighbors=n_neighbors, return_distance=False)
         closest = dest_loc.iloc[nearest[0].tolist()]
         closest = self.add_travel_time(start_loc, closest)
         closest = closest.sort_values(by=['duration'], ascending=True)
@@ -108,7 +122,8 @@ class MapData:
         dest = dest_loc[['lat', 'lng']].values
         start = start_loc[['lat', 'lng']].values
         tree = BallTree(dest, leaf_size=30)
-        nearest = tree.query(start, k=k * 5, return_distance=False)
+        n_neighbors = k * 5 if k * 5 < len(dest) else len(dest)
+        nearest = tree.query(start, k=n_neighbors, return_distance=False)
         closest = dest_loc.iloc[nearest[0].tolist()]
         closest = self.add_travel_time(start_loc, closest)
         closest = closest.sort_values(by=['duration'], ascending=True)
@@ -116,7 +131,7 @@ class MapData:
         closest = pd.concat([start_loc, closest.loc[:]]).reset_index(drop=True)
         return closest
 
-    def get_k_closest_locations_for_user(self, user_id:int, k:int=10, algorithm:str='nn'):
+    def get_k_closest_locations(self, user_id:int, k:int=10, algorithm:str='nn'):
         last_loc = self.get_last_visited_location(user_id)
         dist_loc = self.get_unvisited_locations(user_id)
         dist_loc = dist_loc.drop_duplicates(subset=['location_id'])
@@ -126,3 +141,41 @@ class MapData:
         else:
             data = self.find_k_closest_locations_balltree(k, last_loc, dist_loc)
         return data
+
+    def get_k_closest_2hop_locations(self, user_id:int, k:int=10, algorithm:str='nn'):
+        last_loc = self.get_last_visited_location(user_id)
+        dist_loc = self.get_unvisited_2hop_locations(user_id)
+        dist_loc = dist_loc.drop_duplicates(subset=['location_id'])
+        data = pd.DataFrame
+        if algorithm == 'nn':
+            data = self.find_k_closest_locations_by_lat_lng(k, last_loc, dist_loc)
+        else:
+            data = self.find_k_closest_locations_balltree(k, last_loc, dist_loc)
+        return data
+
+
+map_data = MapData()
+
+# start_time = timeit.default_timer()
+data = map_data.get_k_closest_2hop_locations(2)
+# data = map_data.get_k_closest_2hop_locations(2, 10, 'bt')
+print(data)
+# print(f"BallTree method took {timeit.default_timer() - start_time} s")
+# print(data)
+
+# start_time = timeit.default_timer()
+# data = map_data.get_k_closest_locations_for_user(2, 10, 'nn')
+# print(data)
+# print(f"Nearest Neighbours method took {timeit.default_timer() - start_time} s")
+
+# print("-" * 82)
+
+# start_time = timeit.default_timer()
+# data = map_data.get_k_closest_locations_for_user(2, 10, 'bt')
+# print(data)
+# print(f"BallTree method took {timeit.default_timer() - start_time} s")
+
+# start_time = timeit.default_timer()
+# data = map_data.get_k_closest_locations_for_user(22, 10, 'bt')
+# print(f"BallTree method took {timeit.default_timer() - start_time} s")
+# print(data)
