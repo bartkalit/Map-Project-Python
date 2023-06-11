@@ -21,8 +21,17 @@ class User:
     def get_last_loc(self):
         return self.__last_location
 
-    def add_friend(self, friend : Type['User']):
-        self.__friends.append(friend)
+    def add_friend(self, user : Type['User'], duplicates : bool=True):
+        if duplicates:
+            if self.check_if_friend(user):
+                return None
+        self.__friends.append(user)
+
+    def check_if_friend(self, user : Type['User']):
+        for friend in self.__friends:
+            if user == friend:
+                return True
+        return False
 
     def remove_friend(self, user : Type['User'] = None, friend_id : int = None):
         if user:

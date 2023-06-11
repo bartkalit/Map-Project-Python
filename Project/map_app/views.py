@@ -30,7 +30,7 @@ def travel_time_update(request):
         data = json.loads(body)
         userId = int(data['userId'])
         loc_quantity = 10
-        locations = map_data.get_k_closest_locations_for_user(userId, loc_quantity, 'bt')
+        locations = map_data.get_k_closest_locations(userId, loc_quantity, 'bt')
         context = {
             'locations' : locations.to_json(orient="records")
         }
