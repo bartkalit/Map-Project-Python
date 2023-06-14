@@ -25,7 +25,10 @@ def hop_friend(request):
     return render(request, 'hop-friend.html', context)
 
 def travel_plan(request):
-    return render(request, 'travel-plan.html')
+    context = {
+        'GOOGLE_MAPS_API_KEY': settings.GOOGLE_MAPS_API_KEY,
+    }
+    return render(request, 'travel-plan.html', context)
 
 def travel_time_update(request):
     if request.method == 'POST':
@@ -54,6 +57,24 @@ def hop_time_update(request):
             'locations' : locations.to_json(orient="records"),
             'friends' : friends,
             'chosen_f': chosen_f
+        }
+        return JsonResponse(context)
+    else:
+        pass
+
+def travel_plan_update(request):
+    if request.method == 'POST':
+        body = request.body.decode('utf-8')
+        data = json.loads(body)
+        userId = int(data['userId'])
+        location1 = data['location1']
+        start_loc = (float(location1[0]), float(location1[1]))
+        location2 = data['location2']
+        end_loc = (float(location2[0]), float(location2[1]))
+        locations = map_data.get_k_point_shortest_route(userId, start_loc, end_loc)
+        # locations = map_data.get_k_closest_locations(userId)
+        context = {
+            'locations' : locations.to_json(orient="records")
         }
         return JsonResponse(context)
     else:

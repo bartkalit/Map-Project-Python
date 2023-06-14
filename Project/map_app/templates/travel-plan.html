@@ -1,6 +1,105 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Travel plan view</h1>
+    {% load static %} 
+    <style>
+        #map {
+            margin-top: 1%;
+            height: 400px;
+            width: 100%;
+        }
+        #locationTable th,
+        #locationTable td {
+            padding-left: 6px;
+            padding-right: 6px; 
+        }
+        .table-container {
+            display: flex;
+            margin-top: 40px;
+            
+        }
+        .table-container .table-wrapper {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .table-container h1 {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .table {
+            margin-top: 30px;
+        }
+    </style>
+    <form id="input-form" class="field has-addons">
+        <div class="columns">
+            <div class="column is-one-third">
+                <label class="label">
+                    Start Location
+                </label>
+                <div class="field is-grouped">
+                    <div class="control is-expanded">
+                        <input id="input-lat1" class="input is-info" type="text" placeholder="Latitude" value="34.07526295">
+                        <input id="input-lng1" class="input is-info" type="text" placeholder="Longitude" value="-118.2596849167">
+                    </div>
+                </div>
+            </div>
+            <div class="column is-one-third">
+                <label class="label">
+                    End Location
+                </label>
+                <div class="field">
+                    <div class="control">
+                        <input id="input-lat2" class="input is-info" type="text" placeholder="Latitude" value="34.0798672485">
+                        <input id="input-lng2" class="input is-info" type="text" placeholder="Longitude" value="-118.2429602051">
+                    </div>
+                </div>
+            </div>
+            <div class="column is-half">
+                <label class="label">
+                    User
+                </label>
+                <div class="field has-addons">
+                    <div class="control">
+                        <input id="input-userid" class="input is-info" type="text" placeholder="User ID">
+                    </div>
+                    <div class="control">
+                        <button type="submit" class="button is-info">
+                            Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div id="map"></div>
     
+    <div class="table-container">
+        <div class="table-wrapper">
+            <h1 id="title">Locations</h1>
+            <table id="locationTable" class="table is-hoverable is-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User ID</th>
+                        <th>Lat</th>
+                        <th>Long</th>
+                        <th>Location ID</th>
+                        <th>Distance</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        window.updateMapFunc = "travel-plan-update"
+    </script>
+    <script src="{% static '/js/map.js' %}" type="text/javascript"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap"></script>
 {% endblock %}

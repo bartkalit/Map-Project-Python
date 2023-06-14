@@ -8,4 +8,5 @@ urlpatterns = [
     path('travel-plan', views.travel_plan, name='travel-plan'),
     path('travel-time-update', views.travel_time_update, name='travel-time-update'),
     path('hop-time-update', views.hop_time_update, name='hop-time-update'),
+    path('travel-plan-update', views.travel_plan_update, name='travel-plan-update'),
 ]
