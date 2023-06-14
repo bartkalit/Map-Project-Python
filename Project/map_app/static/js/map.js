@@ -1,5 +1,7 @@
 var map
 var markers = [];
+var directionsService;
+var directionsRenderer;
 
 function initMap() {
     var updateFunc = window.updateMapFunc;
@@ -10,34 +12,100 @@ function initMap() {
     });
     
     var form = document.getElementById('input-form');
-    var input = document.getElementById('input-userid');
+    var input_userid = document.getElementById('input-userid');
+    var input_lat1;
+    var input_lng1;
+    var input_lat2;
+    var input_lng2;
+
+    if (updateFunc == "travel-plan-update") {
+        input_lat1 = document.getElementById('input-lat1');
+        input_lng1 = document.getElementById('input-lng1');
+        input_lat2 = document.getElementById('input-lat2');
+        input_lng2 = document.getElementById('input-lng2');
+    }
     
     form.addEventListener('submit', async e => {
         e.preventDefault();
         
-        var userId = input.value;
-        
-        const response = await fetch(updateFunc, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ userId: userId })
-        })
-        const result = await response.json();
-        const locations = JSON.parse(result.locations)
-        
-        map.setCenter(locations[0])
+        var userId = input_userid.value;
+        var location1;
+        var location2;
+        var result;
 
-        clearMarkers()
-        addMarkers(locations)
-        fillTable(locations)
+        if (updateFunc == "travel-plan-update") {
+            location1 = [input_lat1.value, input_lng1.value];
+            location2 = [input_lat2.value, input_lng2.value];
+            const response = await fetch(updateFunc, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    userId: userId,
+                    location1: location1,
+                    location2: location2
+                })
+            })
+            result = await response.json();
+        }
+        else {
+            const response = await fetch(updateFunc, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    userId: userId
+                })
+            })
+            result = await response.json();
+        }
+        const locations = JSON.parse(result.locations);
+        
+        map.setCenter(locations[0]);
+
+        clearMarkers();
+        fillTable(locations);
 
         if (updateFunc == "hop-time-update") {
-            fillFriendsTable(result.friends, result.chosen_f)
+            fillFriendsTable(result.friends, result.chosen_f);
+        }
+        if (updateFunc == "travel-plan-update") {
+            clearDirections();
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+            var origin = locations[0];
+            var destination = locations[locations.length - 1];
+            var waypoints = [];
+            for (var i = 1; i <  locations.length - 1; i++) {
+                waypoints.push({'location': locations[i]})
+            }
+            var request = {
+                'origin': origin,
+                'destination': destination,
+                'waypoints': waypoints,
+                'travelMode': google.maps.TravelMode.DRIVING 
+            }
+            directionsService.route(request, function(result, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    directionsRenderer.setDirections(result);
+                }
+            });
+        } else {
+            addMarkers(locations)
         }
     });
+}
+
+function clearDirections() {
+    if (directionsRenderer != null){
+        directionsRenderer.setMap(null);
+        directionsRenderer = null;
+    }
 }
 
 function clearMarkers() {
@@ -80,7 +148,7 @@ function fillTable(locations) {
         addColumn(row, loc.user_id);
         addColumn(row, loc.lat);
         addColumn(row, loc.lng);
-        addColumn(row, loc.location_id);
+        addLocationId(row, loc.location_id);
         addColumn(row, loc.duration, 0, "time");
         tableBody.appendChild(row);
         counter++;
@@ -103,16 +171,15 @@ function fillFriendsTable(locations, chosen_f) {
 
 function addColumn(row, column_data, fixed = null, text="") {
     var cell = document.createElement('td');
-    console.log(column_data)
     if(column_data !== null) {
         if (text === "time") {
             if (column_data >= 100) {
                 m = parseInt(column_data / 60);
                 s = column_data % 60;
-                cell.textContent = m + "m " + s + "s";
+                cell.textContent = m + "m " + s.toFixed(fixed) + "s";
             }
             else {
-                cell.textContent = column_data + "s";
+                cell.textContent = column_data.toFixed(fixed) + "s";
             }
         }
         else if(fixed !== null) {
@@ -121,6 +188,19 @@ function addColumn(row, column_data, fixed = null, text="") {
         else {
             cell.textContent = column_data;
         }
+    }
+    row.appendChild(cell);
+}
+
+function addLocationId(row, column_data) {
+    var cell = document.createElement('td');
+    if(column_data !== null) {
+        if (column_data === -1) 
+            cell.textContent = "START";
+        else if (column_data === -2)
+            cell.textContent = "END";
+        else
+            cell.textContent = column_data;
     }
     row.appendChild(cell);
 }
