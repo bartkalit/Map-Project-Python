@@ -7,14 +7,8 @@ from .users_controller.user_list import UserList
 from .traveltime_controller import TravelTime
 
 from math import radians, sin, cos, sqrt, atan2
-from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import BallTree
-from scipy.spatial import distance_matrix
-from ortools.constraint_solver import routing_enums_pb2
-from ortools.constraint_solver import pywrapcp
 from queue import PriorityQueue
-import networkx as nx
-import heapq
 
 
 class MapData:
@@ -213,7 +207,6 @@ class MapData:
                     if time_to_end != None:
                         current_time = current_loc.iloc[0]['duration']
                         if current_time != None:
-                            current_id = current_id
                             prev_time, route_len = self.get_time(dist_val, loc_id)
                             if route_len > longest_route:
                                 longest_route = route_len
