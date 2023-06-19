@@ -19,7 +19,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Once `pip` has finished downloading the dependencies fill the .env file with proper credentials:
+Once `pip` has finished downloading the dependencies fill the .env file with proper credentials and remove .example extension:
 1. [Google Maps API](https://developers.google.com/maps)
 2. [TravelTime API](https://traveltime.com/)
 ```sh
