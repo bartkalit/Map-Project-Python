@@ -148,7 +148,7 @@ class MapData:
         data = self.find_k_closest_locations_balltree(k, last_loc, dist_loc, "walking+ferry")
         return data
 
-    def get_k_point_shortest_route(self, user_id : int , start : (float, float), end : (float, float), max_nodes=10):
+    def get_k_point_shortest_route(self, user_id : int , start, end, max_nodes=10):
         data = self.get_unvisited_locations(user_id)
         # Prepare start location
         start_loc = self.get_first_visited_location(user_id).copy()
